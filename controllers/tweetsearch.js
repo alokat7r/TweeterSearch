@@ -13,26 +13,24 @@ module.exports = {
             consumer_secret: process.env.twitter_consumer_secret,
             bearer_token: process.env.twitter_bearer_token
         });
-        let id = 1019316882984366100,
-            arrayTemp = new Array(
-                '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15',
-                '16', '17', '18', '19', '20'
-            ),
+
+        let id = 1019322160945364992, //Since July 18/18 03:05AM
+            arrayTemp = new Array(70),
             arrayTweet = new Array();
         async.eachSeries(arrayTemp, (element, callback) => {
             console.log("ID", id, element);
             client.get('search/tweets', {
                 q: req.query.keyword,
                 count: 100,
-                result_type: "recent",
-                max_id: id
+                max_id: id,
+                tweet_mode: "extended"
             }, function(error, tweets, response) {
                 //console.log("Tweeter", tweets);
                 tweets.statuses.forEach(function(tweet, index) {
                     id = tweet.id;
                     let jsonTweet = {
                         "lang": tweet.lang + "\n",
-                        "text": tweet.text + "\n",
+                        "text": tweet.full_text + "\n",
                         "created_at": tweet.created_at + "\n",
                         "id": tweet.id + "\n"
                     }
@@ -44,7 +42,7 @@ module.exports = {
             if (err) {
                 return next(err);
             }
-            jsonToFile(arrayTweet).then((result) => {
+            jsonToFile(arrayTweet, req.query.keyword).then((result) => {
                 res.json(result);
             }).catch((err) => {
                 next(err);
@@ -53,11 +51,11 @@ module.exports = {
     },
 };
 
-async function jsonToFile(jsonTweet) {
+async function jsonToFile(jsonTweet, keyword) {
     return await
     new Promise((resolve, reject) => {
         let xls = json2xls(jsonTweet);
-        fs.writeFile('data_' + Date.now() + '.xlsx', xls, 'binary', (err) => {
+        fs.writeFile('data_' + Date.now() + keyword + '.xlsx', xls, 'binary', (err) => {
             if (err) return reject(err);
             resolve(jsonTweet);
         });
